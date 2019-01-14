@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-		<TargetFrameworks>netstandard1.4;net45</TargetFrameworks>
+		<TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
 		<Title>WebAssembly for .NET</Title>
 		<PackageVersion>0.3.5-preview</PackageVersion>
 		<Authors>Ryan Lamansky</Authors>
@@ -32,8 +32,16 @@
     <DocumentationFile>bin\Debug\netstandard1.4\WebAssembly.xml</DocumentationFile>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.4'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETCore.Portable.Compatibility" Version="1.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ikvm-fork\reflect\IKVM.Reflection.csproj"/>
   </ItemGroup>
 
 </Project>

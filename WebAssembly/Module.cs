@@ -631,7 +631,8 @@ namespace WebAssembly
             {
                 this.WriteToBinary(memory);
                 memory.Position = 0;
-                return WebAssembly.Compile.FromBinary<TExports>(memory, imports);
+                //var standard = WebAssembly.Compile.FromBinary<TExports>(memory, imports);
+                return CompileIKVM.FromBinary<TExports>(memory, imports);
             }
         }
 	}
