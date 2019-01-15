@@ -78,5 +78,51 @@ namespace WebAssembly.Instructions
 				}
 			}
 		}
-	}
+
+        internal sealed override void CompileIKVM(IKVMCompilationContext context, IKVM.Reflection.Universe universe)
+        {
+            context.Stack.Push(context.Locals[this.Index]);
+
+            var localIndex = this.Index - context.Signature.ParameterTypes.Length;
+            if (localIndex < 0)
+            {
+                //Referring to a parameter.
+                switch (this.Index)
+                {
+                    default:
+                        if (this.Index <= byte.MaxValue)
+                            context.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_S, checked((byte)this.Index));
+                        else
+                            context.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg, checked((ushort)this.Index));
+                        break;
+
+                    case 0: context.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_0); break;
+                    case 1: context.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_1); break;
+                    case 2: context.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_2); break;
+                    case 3: context.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_3); break;
+                }
+            }
+            else
+            {
+                //Referring to a local.
+                switch (localIndex)
+                {
+                    default:
+                        if (localIndex > 65534) // https://docs.microsoft.com/en-us/dotnet/api/system.reflection.emit.opcodes.ldloc
+                            throw new CompilerException($"Implementation limit exceeded: maximum accessible local index is 65534, tried to access {localIndex}.");
+
+                        if (localIndex <= byte.MaxValue)
+                            context.Emit(IKVM.Reflection.Emit.OpCodes.Ldloc_S, (byte)localIndex);
+                        else
+                            context.Emit(IKVM.Reflection.Emit.OpCodes.Ldloc, checked((ushort)localIndex));
+                        break;
+
+                    case 0: context.Emit(IKVM.Reflection.Emit.OpCodes.Ldloc_0); break;
+                    case 1: context.Emit(IKVM.Reflection.Emit.OpCodes.Ldloc_1); break;
+                    case 2: context.Emit(IKVM.Reflection.Emit.OpCodes.Ldloc_2); break;
+                    case 3: context.Emit(IKVM.Reflection.Emit.OpCodes.Ldloc_3); break;
+                }
+            }
+        }
+    }
 }

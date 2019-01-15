@@ -8,20 +8,20 @@ namespace WebAssembly
 {
     class IKVMCompilationContext
     {
-        /*
         public readonly TypeBuilder ExportsBuilder;
         private ILGenerator generator;
 
         public IKVMCompilationContext(
+            Universe universe,
             TypeBuilder exportsBuilder,
             FieldBuilder memory,
             Signature[] functionSignatures,
             MethodInfo[] methods,
             Signature[] types,
-            Compile.Indirect[] functionElements,
+            CompileIKVM.Indirect[] functionElements,
             ModuleBuilder module,
-            Compile.GlobalInfo[] globalGetters,
-            Compile.GlobalInfo[] globalSetters
+            CompileIKVM.GlobalInfo[] globalGetters,
+            CompileIKVM.GlobalInfo[] globalSetters
             )
         {
             Assert(exportsBuilder != null);
@@ -42,17 +42,17 @@ namespace WebAssembly
             var indirectBuilder = module.DefineType("☣ Indirect",
                 TypeAttributes.Public | //Change to something more appropriate once behavior is validated.
                 TypeAttributes.Sealed | TypeAttributes.SequentialLayout | TypeAttributes.BeforeFieldInit,
-                typeof(System.ValueType)
+                universe.Import(typeof(System.ValueType))
                 );
 
             var indirectTypeFieldBuilder = indirectBuilder.DefineField(
                 "☣ Type",
-                typeof(uint),
+                universe.Import(typeof(uint)),
                 FieldAttributes.Public | FieldAttributes.InitOnly);
 
             var indirectMethodFieldBuilder = indirectBuilder.DefineField(
                 "☣ Method",
-                typeof(IntPtr),
+                universe.Import(typeof(IntPtr)),
                 FieldAttributes.Public | FieldAttributes.InitOnly);
 
             var indirectConstructorBuilder = indirectBuilder.DefineConstructor(
@@ -60,8 +60,8 @@ namespace WebAssembly
                 CallingConventions.HasThis,
                 new[]
                 {
-                    typeof(uint),
-                    typeof(IntPtr),
+                    universe.Import(typeof(uint)),
+                    universe.Import(typeof(IntPtr)),
                 }
                 );
 
@@ -79,7 +79,7 @@ namespace WebAssembly
 
             var indirectLocationsFieldBuilder = indirectBuilder.DefineField(
                 "☣ Locations",
-                typeof(IntPtr),
+                universe.Import(typeof(IntPtr)),
                 FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.InitOnly);
 
             this.generator = il = indirectBuilder.DefineTypeInitializer().GetILGenerator();
@@ -105,17 +105,17 @@ namespace WebAssembly
                 "☣ Get Function Pointer",
                 MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
                 CallingConventions.Standard,
-                typeof(IntPtr),
+                universe.Import(typeof(IntPtr)),
                 new[]
                 {
-                    typeof(uint),
-                    typeof(uint),
+                    universe.Import(typeof(uint)),
+                    universe.Import(typeof(uint)),
                 }
                 );
 
             il = indirectGetFunctionPointer.GetILGenerator();
             var value = il.DeclareLocal(indirectBuilder.AsType());
-            var indexOutOfRange = il.DeclareLocal(typeof(IndexOutOfRangeException));
+            var indexOutOfRange = il.DeclareLocal(universe.Import(typeof(IndexOutOfRangeException)));
             var endTry = il.BeginExceptionBlock();
             il.Emit(OpCodes.Ldsfld, indirectLocationsFieldBuilder);
             il.Emit(OpCodes.Ldarg_0);
@@ -123,11 +123,11 @@ namespace WebAssembly
             il.Emit(OpCodes.Stloc_0);
             il.Emit(OpCodes.Leave_S, endTry);
 
-            il.BeginCatchBlock(typeof(IndexOutOfRangeException));
+            il.BeginCatchBlock(universe.Import(typeof(IndexOutOfRangeException)));
             il.Emit(OpCodes.Stloc_1);
             il.Emit(OpCodes.Ldstr, "index");
             il.Emit(OpCodes.Ldloc_1);
-            il.Emit(OpCodes.Newobj, typeof(IndexOutOfRangeException).GetTypeInfo().DeclaredConstructors.First(c =>
+            il.Emit(OpCodes.Newobj);/*, universe.Import(typeof(IndexOutOfRangeException)).GetTypeInfo().DeclaredConstructors.First(c =>
             {
                 var parms = c.GetParameters();
                 return
@@ -135,7 +135,7 @@ namespace WebAssembly
                     parms[0].ParameterType == typeof(string) &&
                     parms[1].ParameterType == typeof(Exception)
                     ;
-            }));
+            })); */
             il.Emit(OpCodes.Throw);
             il.EndExceptionBlock();
 
@@ -147,7 +147,7 @@ namespace WebAssembly
 
             il.Emit(OpCodes.Ldstr, "Type mismatch");
             il.Emit(OpCodes.Ldstr, "type");
-            il.Emit(OpCodes.Newobj, typeof(ArgumentException).GetTypeInfo().DeclaredConstructors.First(c =>
+            il.Emit(OpCodes.Newobj);/*, universe.Import(typeof(ArgumentException)).GetTypeInfo().DeclaredConstructors.First(c =>
             {
                 var parms = c.GetParameters();
                 return
@@ -155,7 +155,7 @@ namespace WebAssembly
                     parms[0].ParameterType == typeof(string) &&
                     parms[1].ParameterType == typeof(string)
                     ;
-            }));
+            })); */
             il.Emit(OpCodes.Throw);
 
             il.MarkLabel(match);
@@ -223,9 +223,9 @@ namespace WebAssembly
 
         public readonly Signature[] Types;
 
-        public readonly Compile.GlobalInfo[] GlobalGetters;
+        public readonly CompileIKVM.GlobalInfo[] GlobalGetters;
 
-        public readonly Compile.GlobalInfo[] GlobalSetters;
+        public readonly CompileIKVM.GlobalInfo[] GlobalSetters;
 
         internal const MethodAttributes HelperMethodAttributes =
             MethodAttributes.Private |
@@ -281,9 +281,9 @@ namespace WebAssembly
         public readonly HashSet<Label> LoopLabels = new HashSet<Label>();
 
         public readonly Stack<ValueType> Stack = new Stack<ValueType>();
-
+        
         private LocalBuilder indirectPointerLocal;
-
+        
         public LocalBuilder IndirectPointerLocal
         {
             get
@@ -291,10 +291,11 @@ namespace WebAssembly
                 if (this.indirectPointerLocal != null)
                     return this.indirectPointerLocal;
 
-                return this.indirectPointerLocal = this.generator.DeclareLocal(typeof(IntPtr));
+                Universe universe = new Universe();
+                return this.indirectPointerLocal = this.generator.DeclareLocal(universe.Import(typeof(IntPtr)));
             }
         }
-
+        
         public Label DefineLabel() => generator.DefineLabel();
 
         public void MarkLabel(Label loc) => generator.MarkLabel(loc);
@@ -302,7 +303,7 @@ namespace WebAssembly
         public void EmitLoadThis()
         {
             var arg = checked((ushort)this.Signature.ParameterTypes.Length);
-            System.Reflection.Emit.OpCode opCode;
+            IKVM.Reflection.Emit.OpCode opCode;
             switch (arg)
             {
                 case 0: opCode = OpCodes.Ldarg_0; break;
@@ -319,31 +320,30 @@ namespace WebAssembly
             generator.Emit(opCode);
         }
 
-        public void Emit(System.Reflection.Emit.OpCode opcode) => generator.Emit(opcode);
+        public void Emit(IKVM.Reflection.Emit.OpCode opcode) => generator.Emit(opcode);
 
-        public void Emit(System.Reflection.Emit.OpCode opcode, byte arg) => generator.Emit(opcode, arg);
+        public void Emit(IKVM.Reflection.Emit.OpCode opcode, byte arg) => generator.Emit(opcode, arg);
 
-        public void Emit(System.Reflection.Emit.OpCode opcode, int arg) => generator.Emit(opcode, arg);
+        public void Emit(IKVM.Reflection.Emit.OpCode opcode, int arg) => generator.Emit(opcode, arg);
 
-        public void Emit(System.Reflection.Emit.OpCode opcode, long arg) => generator.Emit(opcode, arg);
+        public void Emit(IKVM.Reflection.Emit.OpCode opcode, long arg) => generator.Emit(opcode, arg);
 
-        public void Emit(System.Reflection.Emit.OpCode opcode, float arg) => generator.Emit(opcode, arg);
+        public void Emit(IKVM.Reflection.Emit.OpCode opcode, float arg) => generator.Emit(opcode, arg);
 
-        public void Emit(System.Reflection.Emit.OpCode opcode, double arg) => generator.Emit(opcode, arg);
+        public void Emit(IKVM.Reflection.Emit.OpCode opcode, double arg) => generator.Emit(opcode, arg);
 
-        public void Emit(System.Reflection.Emit.OpCode opcode, Label label) => generator.Emit(opcode, label);
+        public void Emit(IKVM.Reflection.Emit.OpCode opcode, Label label) => generator.Emit(opcode, label);
 
-        public void Emit(System.Reflection.Emit.OpCode opcode, Label[] labels) => generator.Emit(opcode, labels);
+        public void Emit(IKVM.Reflection.Emit.OpCode opcode, Label[] labels) => generator.Emit(opcode, labels);
 
-        public void Emit(System.Reflection.Emit.OpCode opcode, FieldInfo field) => generator.Emit(opcode, field);
+        public void Emit(IKVM.Reflection.Emit.OpCode opcode, FieldInfo field) => generator.Emit(opcode, field);
 
-        public void Emit(System.Reflection.Emit.OpCode opcode, MethodInfo meth) => generator.Emit(opcode, meth);
+        public void Emit(IKVM.Reflection.Emit.OpCode opcode, MethodInfo meth) => generator.Emit(opcode, meth);
 
-        public void Emit(System.Reflection.Emit.OpCode opcode, ConstructorInfo con) => generator.Emit(opcode, con);
+        public void Emit(IKVM.Reflection.Emit.OpCode opcode, ConstructorInfo con) => generator.Emit(opcode, con);
 
-        public void EmitCalli(System.Type returnType, System.Type[] parameterTypes) => generator.EmitCalli(OpCodes.Calli, CallingConventions.Standard, returnType, parameterTypes, null);
+        public void EmitCalli(IKVM.Reflection.Type returnType, IKVM.Reflection.Type[] parameterTypes) => generator.EmitCalli(OpCodes.Calli, CallingConventions.Standard, returnType, parameterTypes, null);
 
-        public LocalBuilder DeclareLocal(System.Type localType) => generator.DeclareLocal(localType);
-        */
+        public LocalBuilder DeclareLocal(IKVM.Reflection.Type localType) => generator.DeclareLocal(localType);
     }
 }

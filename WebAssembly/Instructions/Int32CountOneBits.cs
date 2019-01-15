@@ -34,7 +34,21 @@ namespace WebAssembly.Instructions
 			context.Emit(OpCodes.Call, context[HelperMethod.Int32CountOneBits, CreateHelper]);
 		}
 
-		internal static MethodBuilder CreateHelper(HelperMethod helper, CompilationContext context)
+        internal sealed override void CompileIKVM(IKVMCompilationContext context, IKVM.Reflection.Universe universe)
+        {
+            var stack = context.Stack;
+            if (stack.Count < 1)
+                throw new StackTooSmallException(OpCode.Int32CountOneBits, 1, stack.Count);
+
+            var type = stack.Peek(); //Assuming validation passes, the remaining type will be this.
+
+            if (type != ValueType.Int32)
+                throw new StackTypeInvalidException(OpCode.Int32CountOneBits, ValueType.Int32, type);
+
+            context.Emit(IKVM.Reflection.Emit.OpCodes.Call, CreateHelper(HelperMethod.Int32CountOneBits, context, universe));
+        }
+
+        internal static MethodBuilder CreateHelper(HelperMethod helper, CompilationContext context)
 		{
 			Assert(context != null);
 
@@ -82,5 +96,54 @@ namespace WebAssembly.Instructions
 
 			return result;
 		}
-	}
+
+        internal static IKVM.Reflection.Emit.MethodBuilder CreateHelper(HelperMethod helper, IKVMCompilationContext context, IKVM.Reflection.Universe universe)
+        {
+            Assert(context != null);
+
+            var result = context.ExportsBuilder.DefineMethod(
+                "☣ Int32CountOneBits",
+                IKVMCompilationContext.HelperMethodAttributes,
+                universe.Import(typeof(uint)),
+                new[] { universe.Import(typeof(uint))
+                });
+
+            //All modern CPUs have a fast instruction specifically for this process, but there's no way to use it from .NET.
+            //This algorithm is from https://stackoverflow.com/questions/109023/how-to-count-the-number-of-set-bits-in-a-32-bit-integer
+            var il = result.GetILGenerator();
+
+            il.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_0);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_0);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.Ldc_I4_1);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.Shr_Un);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.Ldc_I4, 0x55555555);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.And);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.Sub);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.Starg_S, 0);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_0);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.Ldc_I4, 0x33333333);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.And);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_0);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.Ldc_I4_2);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.Shr_Un);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.Ldc_I4, 0x33333333);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.And);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.Add);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.Starg_S, 0);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_0);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_0);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.Ldc_I4_4);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.Shr_Un);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.Add);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.Ldc_I4, 0x0f0f0f0f);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.And);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.Ldc_I4, 0x01010101);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.Mul);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.Ldc_I4_S, 24);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.Shr_Un);
+            il.Emit(IKVM.Reflection.Emit.OpCodes.Ret);
+
+            return result;
+        }
+    }
 }

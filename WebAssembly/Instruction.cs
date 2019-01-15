@@ -27,9 +27,9 @@ namespace WebAssembly
 
 		internal abstract void Compile(CompilationContext context);
 
-        internal virtual void CompileIKVM(IKVMCompilationContext context)
+        internal virtual void CompileIKVM(IKVMCompilationContext context, IKVM.Reflection.Universe universe)
         {
-            throw new Exception($"Did not implement CompileIKVM for {OpCode}");
+            Console.WriteLine("Hit CompileIKVM");
         }
 
 		/// <summary>

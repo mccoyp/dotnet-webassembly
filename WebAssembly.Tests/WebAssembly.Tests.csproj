@@ -30,7 +30,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ikvm-fork\reflect\IKVM.Reflection.csproj" />
     <ProjectReference Include="..\WebAssembly\WebAssembly.csproj" />
   </ItemGroup>
 

@@ -227,7 +227,7 @@ namespace WebAssembly
             Indirect[] functionElements = null;
             GlobalInfo[] globalGetters = null;
             GlobalInfo[] globalSetters = null;
-            CompilationContext context = null;  // this will probably need to become an IKVMCompilationContext
+            IKVMCompilationContext context = null;
             IKVM.Reflection.MethodInfo startFunction = null;
             var preSectionOffset = reader.Offset;
             while (reader.TryReadVarUInt7(out var id)) //At points where TryRead is used, the stream can safely end.
@@ -695,8 +695,8 @@ namespace WebAssembly
 
                             if (context == null) //Might have been created by the Global section, if present.
                             {
-                                /*  this will have to be replaced with an IKVMCompilationContext
-                                context = new CompilationContext(
+                                context = new IKVMCompilationContext(
+                                    universe,
                                     exportsBuilder,
                                     memory,
                                     functionSignatures,
@@ -707,7 +707,6 @@ namespace WebAssembly
                                     globalGetters,
                                     globalSetters
                                     );
-                                */
                             }
 
                             for (var functionBodyIndex = 0; functionBodyIndex < functionBodies; functionBodyIndex++)
@@ -721,7 +720,7 @@ namespace WebAssembly
                                     locals[localIndex] = new Local(reader);
 
                                 var il = ((IKVM.Reflection.Emit.MethodBuilder)internalFunctions[importedFunctions + functionBodyIndex]).GetILGenerator();
-                                /*  will need IKVMCompilationContext
+                                
                                 context.Reset(
                                     il,
                                     signature,
@@ -730,7 +729,6 @@ namespace WebAssembly
                                         .SelectMany(local => Enumerable.Range(0, checked((int)local.Count)).Select(_ => local.Type))
                                         ).ToArray()
                                     );
-                                */
 
                                 foreach (var local in locals.SelectMany(local => Enumerable.Range(0, checked((int)local.Count)).Select(_ => local.Type)))
                                 {
@@ -739,7 +737,7 @@ namespace WebAssembly
 
                                 foreach (var instruction in Instruction.Parse(reader))
                                 {
-                                    instruction.Compile(context);
+                                    instruction.CompileIKVM(context, universe);
                                     context.Previous = instruction.OpCode;
                                 }
 
@@ -758,27 +756,26 @@ namespace WebAssembly
 
                             if (context == null) //Would only be null if there is no Global or Code section, but have to check.
                             {
-                                /*  needs IKVMCompilationContext
-                                context = new CompilationContext(
+                                context = new IKVMCompilationContext(
+                                    universe,
                                     exportsBuilder,
                                     memory,
                                     new Signature[0],
-                                    new MethodInfo[0],
+                                    new IKVM.Reflection.MethodInfo[0],
                                     new Signature[0],
                                     functionElements,
                                     module,
                                     globalGetters,
                                     globalSetters
                                     );
-                                */
                             }
-                            /*  needs IKVMCompilationContext
+                            
                             context.Reset(
                                 instanceConstructorIL,
                                 Signature.Empty,
                                 Signature.Empty.RawParameterTypes
                                 );
-                            */
+                            
                             var block = new Instructions.Block(BlockType.Int32);
 
                             var address = instanceConstructorIL.DeclareLocal(universe.Import(typeof(uint)));
@@ -792,10 +789,10 @@ namespace WebAssembly
                                         throw new ModuleLoadException($"Data index must be 0, found {index}.", startingOffset);
                                 }
 
-                                block.Compile(context); //Prevents "end" instruction of the initializer expression from becoming a return.
+                                block.CompileIKVM(context, universe); //Prevents "end" instruction of the initializer expression from becoming a return.
                                 foreach (var instruction in Instruction.ParseInitializerExpression(reader))
                                 {
-                                    instruction.Compile(context);
+                                    instruction.CompileIKVM(context, universe);
                                     context.Previous = instruction.OpCode;
                                 }
                                 context.Stack.Pop();
