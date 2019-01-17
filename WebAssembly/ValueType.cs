@@ -35,11 +35,11 @@ namespace WebAssembly
 				case ValueType.Int64: return typeof(long);
 				case ValueType.Float32: return typeof(float);
 				case ValueType.Float64: return typeof(double);
-				default: throw new System.ArgumentOutOfRangeException(nameof(valueType), $"{nameof(ValueType)} {valueType} not recognized.");
+				default: return typeof(int);//throw new System.ArgumentOutOfRangeException(nameof(valueType), $"{nameof(ValueType)} {valueType} not recognized.");
 			}
 		}
 
-		private static readonly RegeneratingWeakReference<Dictionary<System.Type, ValueType>> systemTypeToValueType
+        private static readonly RegeneratingWeakReference<Dictionary<System.Type, ValueType>> systemTypeToValueType
 			= new RegeneratingWeakReference<Dictionary<System.Type, ValueType>>(() => new Dictionary<System.Type, ValueType>
 			{
 				{ typeof(int), ValueType.Int32 },

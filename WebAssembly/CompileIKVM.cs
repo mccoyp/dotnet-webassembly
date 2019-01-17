@@ -29,7 +29,7 @@ namespace WebAssembly
 		/// The specified path, file name, or both exceed the system-defined maximum length.
 		/// For example, on Windows-based platforms, paths must be less than 248 characters, and file names must be less than 260 characters.</exception>
 		/// <exception cref="ModuleLoadException">An error was encountered while reading the WebAssembly file.</exception>
-		public static Func<Instance<TExports>> FromBinary<TExports>(string path, IEnumerable<RuntimeImport> imports = null)
+		public static IKVM.Reflection.Emit.AssemblyBuilder FromBinary<TExports>(string path, IEnumerable<RuntimeImport> imports = null)
         where TExports : class
         {
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 4 * 1024, FileOptions.SequentialScan))
@@ -45,7 +45,7 @@ namespace WebAssembly
         /// <param name="imports">Functionality to integrate into the WebAssembly instance.</param>
         /// <returns>A function that creates instances on demand.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="input"/> cannot be null.</exception>
-        public static Func<Instance<TExports>> FromBinary<TExports>(Stream input, IEnumerable<RuntimeImport> imports = null)
+        public static IKVM.Reflection.Emit.AssemblyBuilder FromBinary<TExports>(Stream input, IEnumerable<RuntimeImport> imports = null)
         where TExports : class
         {
             var exportInfo = typeof(TExports).GetTypeInfo();
@@ -87,17 +87,7 @@ namespace WebAssembly
                 }
             }
 
-            return () =>
-            {
-                try
-                {
-                    return null;  // changed this
-                }
-                catch (TargetInvocationException x)
-                {
-                    throw x.InnerException;
-                }
-            };
+            return assembly;
         }
 
         private struct Local
@@ -189,13 +179,13 @@ namespace WebAssembly
                 IKVM.Reflection.MethodAttributes.SpecialName |
                 IKVM.Reflection.MethodAttributes.RTSpecialName
                 ;
-
+            
             const IKVM.Reflection.MethodAttributes internalFunctionAttributes =
                 IKVM.Reflection.MethodAttributes.Assembly |
                 IKVM.Reflection.MethodAttributes.Static |
                 IKVM.Reflection.MethodAttributes.HideBySig
                 ;
-
+            
             const IKVM.Reflection.MethodAttributes exportedFunctionAttributes =
                 IKVM.Reflection.MethodAttributes.Public |
                 IKVM.Reflection.MethodAttributes.Virtual |
@@ -251,12 +241,13 @@ namespace WebAssembly
                             signatures = new Signature[reader.ReadVarUInt32()];
 
                             for (var i = 0; i < signatures.Length; i++)
-                                signatures[i] = new Signature(reader, (uint)i);
+                                signatures[i] = new Signature(universe, reader, (uint)i);
                         }
                         break;
 
                     case Section.Import:
                         {
+                            /*
                             if (imports == null)
                                 imports = Enumerable.Empty<RuntimeImport>();
 
@@ -279,7 +270,6 @@ namespace WebAssembly
 
                                 switch (kind)
                                 {
-                                    /*
                                     case ExternalKind.Function:
                                         var typeIndex = reader.ReadVarUInt32();
                                         if (!(import is FunctionImport functionImport))
@@ -289,7 +279,7 @@ namespace WebAssembly
                                         if (!signature.Equals(functionImport.Type))
                                             throw new CompilerException($"{moduleName}::{fieldName} did not match the required type signature.");
 
-                                        functionImports.Add(functionImport.Method);  // not sure how to handle this conversion
+                                        functionImports.Add(functionImport.IKVMMethod);
                                         functionImportTypes.Add(signature);
                                         break;
 
@@ -298,9 +288,8 @@ namespace WebAssembly
                                         if (!(import is MemoryImport memoryImport))
                                             throw new CompilerException($"{moduleName}::{fieldName} is expected to be memory, but provided import was not.");
 
-                                        importedMemoryProvider = memoryImport.Method;  // not sure how to handle this conversion
+                                        importedMemoryProvider = memoryImport.IKVMMethod;
                                         break;
-                                    */
 
                                     case ExternalKind.Table:
                                         break;
@@ -316,9 +305,10 @@ namespace WebAssembly
                             importedFunctions = functionImports.Count;
                             internalFunctions = functionImports.ToArray();
                             functionSignatures = functionImportTypes.ToArray();
+                            */
                         }
                         break;
-
+                        
                     case Section.Function:
                         {
                             var importedFunctionCount = internalFunctions == null ? 0 : internalFunctions.Length;
@@ -331,13 +321,17 @@ namespace WebAssembly
                                 Array.Resize(ref internalFunctions, checked(functionSignatures.Length));
                             else
                                 internalFunctions = new IKVM.Reflection.MethodInfo[functionSignatures.Length];
-
+                            
                             for (var i = importedFunctionCount; i < functionSignatures.Length; i++)
                             {
                                 var signature = functionSignatures[i] = signatures[reader.ReadVarUInt32()];
-                                internalFunctions[i] = exportsBuilder.DefineMethod(  // changes made here that may need to be revisited
+                                var parms = signature.IKVMParameterTypes.Concat(new[] { exports }).ToArray();
+                                internalFunctions[i] = exportsBuilder.DefineMethod(
                                     $"👻 {i}",
-                                    internalFunctionAttributes
+                                    internalFunctionAttributes,
+                                    IKVM.Reflection.CallingConventions.Standard,
+                                    signature.IKVMReturnTypes.FirstOrDefault(),
+                                    parms
                                     );
                             }
                         }

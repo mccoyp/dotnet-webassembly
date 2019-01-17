@@ -238,7 +238,8 @@ namespace WebAssembly
 				{
 					case Section.None:
 						{
-							var preNameOffset = reader.Offset;
+                            Console.WriteLine(reader.Offset);  // for debugging
+                            var preNameOffset = reader.Offset;
 							reader.ReadString(reader.ReadVarUInt32()); //Name
 							reader.ReadBytes(payloadLength - checked((uint)(reader.Offset - preNameOffset))); //Content
 						}
@@ -246,7 +247,8 @@ namespace WebAssembly
 
 					case Section.Type:
 						{
-							signatures = new Signature[reader.ReadVarUInt32()];
+                            Console.WriteLine(reader.Offset);  // for debugging
+                            signatures = new Signature[reader.ReadVarUInt32()];
 
 							for (var i = 0; i < signatures.Length; i++)
 								signatures[i] = new Signature(reader, (uint)i);
@@ -255,7 +257,8 @@ namespace WebAssembly
 
 					case Section.Import:
 						{
-							if (imports == null)
+                            Console.WriteLine(reader.Offset);  // for debugging
+                            if (imports == null)
 								imports = Enumerable.Empty<RuntimeImport>();
 
 							var importsByName = imports.ToDictionary(import => new Tuple<string, string>(import.ModuleName, import.FieldName));
@@ -315,7 +318,8 @@ namespace WebAssembly
 
 					case Section.Function:
 						{
-							var importedFunctionCount = internalFunctions == null ? 0 : internalFunctions.Length;
+                            Console.WriteLine(reader.Offset);  // for debugging
+                            var importedFunctionCount = internalFunctions == null ? 0 : internalFunctions.Length;
 							var functionIndexSize = checked((int)(importedFunctionCount + reader.ReadVarUInt32()));
 							if (functionSignatures != null)
 								Array.Resize(ref functionSignatures, functionIndexSize);
@@ -343,7 +347,8 @@ namespace WebAssembly
 
 					case Section.Table:
 						{
-							var count = reader.ReadVarUInt32();
+                            Console.WriteLine(reader.Offset);  // for debugging
+                            var count = reader.ReadVarUInt32();
 							for (var i = 0; i < count; i++)
 							{
 								var elementType = (ElementType)reader.ReadVarInt7();
@@ -365,7 +370,8 @@ namespace WebAssembly
 
 					case Section.Memory:
 						{
-							var preCountOffset = reader.Offset;
+                            Console.WriteLine(reader.Offset);  // for debugging
+                            var preCountOffset = reader.Offset;
 							var count = reader.ReadVarUInt32();
 							if (count > 1)
 								throw new ModuleLoadException("Multiple memory values are not supported.", preCountOffset);
@@ -430,7 +436,8 @@ namespace WebAssembly
 
 					case Section.Global:
 						{
-							var count = reader.ReadVarUInt32();
+                            Console.WriteLine(reader.Offset);  // for debugging
+                            var count = reader.ReadVarUInt32();
 							globalGetters = new GlobalInfo[count];
 							globalSetters = new GlobalInfo[count];
 
@@ -539,7 +546,8 @@ namespace WebAssembly
 
 					case Section.Export:
 						{
-							const MethodAttributes exportedPropertyAttributes = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual | MethodAttributes.Final;
+                            Console.WriteLine(reader.Offset);  // for debugging
+                            const MethodAttributes exportedPropertyAttributes = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual | MethodAttributes.Final;
 							var totalExports = reader.ReadVarUInt32();
 							var xFunctions = new List<KeyValuePair<string, uint>>((int)Math.Min(int.MaxValue, totalExports));
 
@@ -630,7 +638,8 @@ namespace WebAssembly
 
 					case Section.Start:
 						{
-							var preReadOffset = reader.Offset;
+                            Console.WriteLine(reader.Offset);  // for debugging
+                            var preReadOffset = reader.Offset;
 							var startIndex = reader.ReadVarInt32();
 							if (startIndex >= internalFunctions.Length)
 								throw new ModuleLoadException($"Start function of index {startIndex} exceeds available functions of {internalFunctions.Length}", preReadOffset);
@@ -641,7 +650,8 @@ namespace WebAssembly
 
 					case Section.Element:
 						{
-							if (functionElements == null)
+                            Console.WriteLine(reader.Offset);  // for debugging
+                            if (functionElements == null)
 								throw new ModuleLoadException("Element section found without an associated table section.", preSectionOffset);
 
 							var count = reader.ReadVarUInt32();
@@ -678,7 +688,8 @@ namespace WebAssembly
 
 					case Section.Code:
 						{
-							var preBodiesIndex = reader.Offset;
+                            Console.WriteLine(reader.Offset);  // for debugging
+                            var preBodiesIndex = reader.Offset;
 							var functionBodies = reader.ReadVarUInt32();
 
 							if (functionBodies > 0 && (functionSignatures == null || functionSignatures.Length == importedFunctions))
@@ -741,6 +752,7 @@ namespace WebAssembly
 
 					case Section.Data:
 						{
+                            Console.WriteLine(reader.Offset);  // for debugging
 							if (memory == null)
 								throw new ModuleLoadException("Data section cannot be used unless a memory section is defined.", preSectionOffset);
 
