@@ -57,9 +57,20 @@ namespace WebAssembly
             {
                 Universe universe = new Universe();  // create an IKVM universe in order to perform System.Type to IKVM.Reflection.Type conversion
                 universe.LoadFile(typeof(void).Assembly.Location);
+#if CORECLR
+                const string netstandard_2_0 = "netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51";
+                var netstandard_Location = System.Reflection.Assembly.Load(netstandard_2_0).Location;
+                universe.LoadFile(netstandard_Location);
+
+                const string sr = "System.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a";
+                var sr_Loc = System.Reflection.Assembly.Load(sr).Location;
+                universe.LoadFile(sr_Loc);
+#endif
+                universe.LoadFile(typeof(Instance<>).Assembly.Location);
+                universe.LoadFile(typeof(TExports).Assembly.Location);
                 try
                 {
-                    assembly = FromBinary(reader, universe, typeof(Instance<TExports>), typeof(TExports), imports);
+                    assembly = FromBinary(reader, universe, universe.Import(typeof(Instance<TExports>)), universe.Import(typeof(TExports)), imports);
                 }
                 catch (OverflowException x)
 #if DEBUG
@@ -135,8 +146,8 @@ namespace WebAssembly
         private static IKVM.Reflection.Emit.AssemblyBuilder FromBinary(
             Reader reader,
             Universe universe,
-            System.Type instanceContainer,
-            System.Type exportContainer,
+            IKVM.Reflection.Type instanceContainer,
+            IKVM.Reflection.Type exportContainer,
             IEnumerable<RuntimeImport> imports
             )
         {
@@ -192,8 +203,8 @@ namespace WebAssembly
                 IKVM.Reflection.MethodAttributes.Final |
                 IKVM.Reflection.MethodAttributes.HideBySig
                 ;
-
-            var exportsBuilder = module.DefineType("CompiledExports", classAttributes);//, exportContainer);
+            
+            var exportsBuilder = module.DefineType("CompiledExports", classAttributes, exportContainer);
             //IKVM.Reflection.MethodInfo importedMemoryProvider = null;
             IKVM.Reflection.Emit.FieldBuilder memory = null;
 
@@ -874,14 +885,20 @@ namespace WebAssembly
 
             IKVM.Reflection.TypeInfo instance;
             {
-                var instanceBuilder = module.DefineType("CompiledInstance", classAttributes);
+                var instanceBuilder = module.DefineType("CompiledInstance", classAttributes, instanceContainer);
                 var instanceConstructor = instanceBuilder.DefineConstructor(constructorAttributes, IKVM.Reflection.CallingConventions.Standard, null);
                 var il = instanceConstructor.GetILGenerator();
                 var memoryAllocated = checked(memoryPagesMaximum * Memory.PageSize);
 
                 il.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_0);
                 il.Emit(IKVM.Reflection.Emit.OpCodes.Newobj, exportInfo.DeclaredConstructors.First());
-                il.Emit(IKVM.Reflection.Emit.OpCodes.Call);
+                il.Emit(IKVM.Reflection.Emit.OpCodes.Call, instanceContainer
+                    .GetTypeInfo()
+                    .DeclaredConstructors
+                    .First(info => info.GetParameters()
+                    .FirstOrDefault()
+                    ?.ParameterType == exportContainer
+                    ));
                 il.Emit(IKVM.Reflection.Emit.OpCodes.Ret);
 
                 instance = instanceBuilder.CreateTypeInfo();

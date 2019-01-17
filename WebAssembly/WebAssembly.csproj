@@ -39,6 +39,9 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.NETCore.Portable.Compatibility" Version="1.0.1" />
   </ItemGroup>
+  <PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
+    <DefineConstants>CORECLR</DefineConstants>
+  </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ikvm-fork\reflect\IKVM.Reflection.csproj"/>

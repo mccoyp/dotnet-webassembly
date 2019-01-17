@@ -73,7 +73,7 @@ static class Program
         //For stream-based compilation, WebAssembly.Compile should be used.
         //var instanceCreator = module.Compile<Sample>();
         var assembly = module.CompileIKVM<Sample>();
-        assembly.Save("SampleAssembly.dll");
+        assembly.Save("CompiledWebAssembly.dll");
 
         /*
         //Instances should be wrapped in a "using" block for automatic disposal.
@@ -85,5 +85,15 @@ static class Program
             Console.WriteLine(instance.Exports.Demo(42));  //Binary 101010, result 3
         } //Automatically release the WebAssembly instance here.
         */
+    }
+
+    public static void RunLoadedWasm ()
+    {
+        string filename = @".\CompiledWebAssembly.dll";
+        System.Reflection.Assembly loadedAsm = System.Reflection.Assembly.LoadFrom(filename);
+        var t = loadedAsm.GetType("???");
+        object instance = Activator.CreateInstance(t);
+        var o = instance as Instance<Sample>;
+        o.Exports.Demo(0);
     }
 }
