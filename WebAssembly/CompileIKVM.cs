@@ -56,18 +56,29 @@ namespace WebAssembly
             using (var reader = new Reader(input))
             {
                 Universe universe = new Universe();  // create an IKVM universe in order to perform System.Type to IKVM.Reflection.Type conversion
-                universe.LoadFile(typeof(void).Assembly.Location);
+                //universe.LoadFile(typeof(void).Assembly.Location);
 #if CORECLR
-                const string netstandard_2_0 = "netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51";
-                var netstandard_Location = System.Reflection.Assembly.Load(netstandard_2_0).Location;
-                universe.LoadFile(netstandard_Location);
+                IKVM.Reflection.ResolveEventHandler handler = (sender, args) =>
+                {
+                    Console.Error.WriteLine("Request for {0}", args.Name);
+                    var asm = System.Reflection.Assembly.Load(args.Name);
+                    var loc = asm.Location;
+                    Console.Error.WriteLine("Request for {0} resolved to {1}", args.Name, loc);
+                    var ikvmAsm = universe.LoadFile(loc);
+                    return ikvmAsm;
+                };
+                universe.AssemblyResolve += handler;
 
-                const string sr = "System.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a";
-                var sr_Loc = System.Reflection.Assembly.Load(sr).Location;
-                universe.LoadFile(sr_Loc);
+                //const string netstandard_2_0 = "netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51";
+                //var netstandard_Location = System.Reflection.Assembly.Load(netstandard_2_0).Location;
+                //universe.LoadFile(netstandard_Location);
+
+                //const string sr = "System.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a";
+                //var sr_Loc = System.Reflection.Assembly.Load(sr).Location;
+                //universe.LoadFile(sr_Loc);
 #endif
-                universe.LoadFile(typeof(Instance<>).Assembly.Location);
-                universe.LoadFile(typeof(TExports).Assembly.Location);
+                //universe.LoadFile(typeof(Instance<>).Assembly.Location);
+                //universe.LoadFile(typeof(TExports).Assembly.Location);
                 try
                 {
                     assembly = FromBinary(reader, universe, universe.Import(typeof(Instance<TExports>)), universe.Import(typeof(TExports)), imports);
@@ -95,6 +106,10 @@ namespace WebAssembly
                 )
                 {
                     throw new ModuleLoadException(x.Message, reader.Offset, x);
+                }
+                finally
+                {
+                    universe.AssemblyResolve -= handler;
                 }
             }
 
