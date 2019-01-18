@@ -71,11 +71,12 @@ static class Program
         //We now have enough for a usable WASM file, which we could save with module.WriteToBinary().
         //Below, we show how the Compile feature can be used for .NET-based execution.
         //For stream-based compilation, WebAssembly.Compile should be used.
-        //var instanceCreator = module.Compile<Sample>();
-        var assembly = module.CompileIKVM<Sample>();
+        Func<Instance<Sample>> instanceCreator = module.Compile<Sample>();
+        IKVM.Reflection.Emit.AssemblyBuilder assembly = module.CompileIKVM<Sample>();
         assembly.Save("CompiledWebAssembly.dll");
+        Console.WriteLine(RunLoadedWasm());
 
-        /*
+        
         //Instances should be wrapped in a "using" block for automatic disposal.
         using (var instance = instanceCreator())
         {
@@ -84,16 +85,15 @@ static class Program
             Console.WriteLine(instance.Exports.Demo(1)); //Binary 1, result 1
             Console.WriteLine(instance.Exports.Demo(42));  //Binary 101010, result 3
         } //Automatically release the WebAssembly instance here.
-        */
     }
 
-    public static void RunLoadedWasm ()
+    public static int RunLoadedWasm ()
     {
         string filename = @".\CompiledWebAssembly.dll";
         System.Reflection.Assembly loadedAsm = System.Reflection.Assembly.LoadFrom(filename);
-        var t = loadedAsm.GetType("???");
+        var t = loadedAsm.GetType("CompiledExports");
         object instance = Activator.CreateInstance(t);
         var o = instance as Instance<Sample>;
-        o.Exports.Demo(0);
+        return o.Exports.Demo(0);
     }
 }
