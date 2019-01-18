@@ -107,10 +107,12 @@ namespace WebAssembly
                 {
                     throw new ModuleLoadException(x.Message, reader.Offset, x);
                 }
+#if CORECLR
                 finally
                 {
                     universe.AssemblyResolve -= handler;
                 }
+#endif
             }
 
             return assembly;
