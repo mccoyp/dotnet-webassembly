@@ -232,7 +232,7 @@ namespace WebAssembly
                     if (usableConstructor != null)
                     {
                         instanceConstructorIL.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_0);
-                        instanceConstructorIL.Emit(IKVM.Reflection.Emit.OpCodes.Call);
+                        instanceConstructorIL.Emit(IKVM.Reflection.Emit.OpCodes.Call, usableConstructor);
                     }
                 }
             }
