@@ -56,7 +56,6 @@ where TExports : class
 	    using (var reader = new Reader(input))
 	    {
 		Universe universe = new Universe();  // create an IKVM universe in order to perform System.Type to IKVM.Reflection.Type conversion
-						     //universe.LoadFile(typeof(void).Assembly.Location);
 #if CORECLR
 		IKVM.Reflection.ResolveEventHandler handler = (sender, args) =>
 		{
@@ -68,17 +67,7 @@ where TExports : class
 		    return ikvmAsm;
 		};
 		universe.AssemblyResolve += handler;
-
-		//const string netstandard_2_0 = "netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51";
-		//var netstandard_Location = System.Reflection.Assembly.Load(netstandard_2_0).Location;
-		//universe.LoadFile(netstandard_Location);
-
-		//const string sr = "System.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a";
-		//var sr_Loc = System.Reflection.Assembly.Load(sr).Location;
-		//universe.LoadFile(sr_Loc);
 #endif
-		//universe.LoadFile(typeof(Instance<>).Assembly.Location);
-		//universe.LoadFile(typeof(TExports).Assembly.Location);
 		try
 		{
 		    assembly = FromBinary(reader, universe, universe.Import(typeof(Instance<TExports>)), universe.Import(typeof(TExports)), imports);
@@ -180,7 +169,7 @@ where TExports : class
 		    throw new ModuleLoadException("Unsupported version, only version 0x1 and 0xd are accepted.", 4);
 	    }
 
-	    //uint memoryPagesMinimum = 0;
+	    uint memoryPagesMinimum = 0;
 	    uint memoryPagesMaximum = 0;
 
 	    Signature[] signatures = null;
@@ -222,7 +211,7 @@ where TExports : class
 		;
 
 	    var exportsBuilder = module.DefineType("CompiledExports", classAttributes, exportContainer);
-	    //IKVM.Reflection.MethodInfo importedMemoryProvider = null;
+	    IKVM.Reflection.MethodInfo importedMemoryProvider = null;
 	    IKVM.Reflection.Emit.FieldBuilder memory = null;
 
 	    IKVM.Reflection.Emit.ILGenerator instanceConstructorIL;
@@ -275,7 +264,6 @@ where TExports : class
 
 		    case Section.Import:
 			{
-			    /*
                             if (imports == null)
                                 imports = Enumerable.Empty<RuntimeImport>();
 
@@ -333,7 +321,6 @@ where TExports : class
                             importedFunctions = functionImports.Count;
                             internalFunctions = functionImports.ToArray();
                             functionSignatures = functionImportTypes.ToArray();
-                            */
 			}
 			break;
 
@@ -386,7 +373,7 @@ where TExports : class
 			    }
 			}
 			break;
-		    /*
+		    
                     case Section.Memory:
                         {
                             var preCountOffset = reader.Offset;
@@ -401,54 +388,60 @@ where TExports : class
                             else
                                 memoryPagesMaximum = uint.MaxValue / Memory.PageSize;
 
-                            memory = exportsBuilder.DefineField("☣ Memory", typeof(Runtime.UnmanagedMemory), FieldAttributes.Private | FieldAttributes.InitOnly);
+                            memory = exportsBuilder.DefineField("☣ Memory", universe.Import(typeof(Runtime.UnmanagedMemory)), IKVM.Reflection.FieldAttributes.Private | IKVM.Reflection.FieldAttributes.InitOnly);
 
-                            instanceConstructorIL.Emit(OpCodes.Ldarg_0);
+                            instanceConstructorIL.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_0);
                             if (importedMemoryProvider == null)
                             {
                                 Instructions.Int32Constant.Emit(instanceConstructorIL, (int)memoryPagesMinimum);
                                 Instructions.Int32Constant.Emit(instanceConstructorIL, (int)memoryPagesMaximum);
-                                instanceConstructorIL.Emit(OpCodes.Newobj, typeof(uint?).GetTypeInfo().DeclaredConstructors.Where(info =>
+                                instanceConstructorIL.Emit(IKVM.Reflection.Emit.OpCodes.Newobj, universe.Import(typeof(uint?)).GetTypeInfo().DeclaredConstructors.Where(info =>
                                 {
                                     var parms = info.GetParameters();
-                                    return parms.Length == 1 && parms[0].ParameterType == typeof(uint);
+                                    return parms.Length == 1 && parms[0].ParameterType == universe.Import(typeof(uint));
                                 }).First());
 
-                                instanceConstructorIL.Emit(OpCodes.Newobj, typeof(Runtime.UnmanagedMemory).GetTypeInfo().DeclaredConstructors.Where(info =>
+				instanceConstructorIL.Emit(IKVM.Reflection.Emit.OpCodes.Newobj, universe.Import(typeof(Runtime.UnmanagedMemory)).GetTypeInfo().DeclaredConstructors.Where(info =>
                                 {
                                     var parms = info.GetParameters();
-                                    return parms.Length == 2 && parms[0].ParameterType == typeof(uint) && parms[1].ParameterType == typeof(uint?);
+                                    return parms.Length == 2 && parms[0].ParameterType == universe.Import(typeof(uint)) && parms[1].ParameterType == universe.Import(typeof(uint?));
                                 }).First());
                             }
                             else
                             {
-                                instanceConstructorIL.Emit(OpCodes.Call, importedMemoryProvider);
+                                instanceConstructorIL.Emit(IKVM.Reflection.Emit.OpCodes.Call, importedMemoryProvider);
                             }
 
-                            instanceConstructorIL.Emit(OpCodes.Stfld, memory);
+                            instanceConstructorIL.Emit(IKVM.Reflection.Emit.OpCodes.Stfld, memory);
 
-                            exportsBuilder.AddInterfaceImplementation(typeof(IDisposable));
+                            exportsBuilder.AddInterfaceImplementation(universe.Import(typeof(IDisposable)));
+
+			    List<IKVM.Reflection.Type> ikvmEmptyTypes = new List<IKVM.Reflection.Type>();
+			    foreach (System.Type type in System.Type.EmptyTypes)
+			    {
+				ikvmEmptyTypes.Add(universe.Import(type));
+			    }
 
                             var dispose = exportsBuilder.DefineMethod(
                                 "Dispose",
-                                MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.NewSlot,
-                                CallingConventions.HasThis,
-                                typeof(void),
-                                System.Type.EmptyTypes
+                                IKVM.Reflection.MethodAttributes.Public | IKVM.Reflection.MethodAttributes.Virtual | IKVM.Reflection.MethodAttributes.Final | IKVM.Reflection.MethodAttributes.HideBySig | IKVM.Reflection.MethodAttributes.NewSlot,
+                                IKVM.Reflection.CallingConventions.HasThis,
+                                universe.Import(typeof(void)),
+                                ikvmEmptyTypes.ToArray()
                                 );
 
                             var disposeIL = dispose.GetILGenerator();
-                            disposeIL.Emit(OpCodes.Ldarg_0);
-                            disposeIL.Emit(OpCodes.Ldfld, memory);
-                            disposeIL.Emit(OpCodes.Call, typeof(Runtime.UnmanagedMemory)
+                            disposeIL.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_0);
+                            disposeIL.Emit(IKVM.Reflection.Emit.OpCodes.Ldfld, memory);
+                            disposeIL.Emit(IKVM.Reflection.Emit.OpCodes.Call, universe.Import(typeof(Runtime.UnmanagedMemory))
                                 .GetTypeInfo()
                                 .DeclaredMethods
                                 .Where(info =>
-                                info.ReturnType == typeof(void)
+                                info.ReturnType == universe.Import(typeof(void))
                                 && info.GetParameters().Length == 0
                                 && info.Name == nameof(Runtime.UnmanagedMemory.Dispose))
                                 .First());
-                            disposeIL.Emit(OpCodes.Ret);
+                            disposeIL.Emit(IKVM.Reflection.Emit.OpCodes.Ret);
                         }
                         break;
                     
@@ -458,8 +451,9 @@ where TExports : class
                             globalGetters = new GlobalInfo[count];
                             globalSetters = new GlobalInfo[count];
 
-                            context = new CompilationContext(
-                                exportsBuilder,
+                            context = new IKVMCompilationContext(
+				universe,
+				exportsBuilder,
                                 memory,
                                 functionSignatures,
                                 internalFunctions,
@@ -480,8 +474,8 @@ where TExports : class
                                 var getter = exportsBuilder.DefineMethod(
                                     $"🌍 Get {i}",
                                     internalFunctionAttributes,
-                                    CallingConventions.Standard,
-                                    contentType.ToSystemType(),
+				    IKVM.Reflection.CallingConventions.Standard,
+                                    universe.Import(contentType.ToSystemType()),
                                     isMutable ? new[] { exports } : null
                                     );
 
@@ -500,7 +494,7 @@ where TExports : class
 
                                     foreach (var instruction in Instruction.ParseInitializerExpression(reader))
                                     {
-                                        instruction.Compile(context);
+                                        instruction.CompileIKVM(context, universe);
                                         context.Previous = instruction.OpCode;
                                     }
                                 }
@@ -508,27 +502,27 @@ where TExports : class
                                 {
                                     var field = exportsBuilder.DefineField(
                                         $"🌍 {i}",
-                                        contentType.ToSystemType(),
-                                        FieldAttributes.Private | (isMutable ? 0 : FieldAttributes.InitOnly)
+                                        universe.Import(contentType.ToSystemType()),
+					IKVM.Reflection.FieldAttributes.Private | (isMutable ? 0 : IKVM.Reflection.FieldAttributes.InitOnly)
                                         );
 
-                                    il.Emit(OpCodes.Ldarg_0);
-                                    il.Emit(OpCodes.Ldfld, field);
-                                    il.Emit(OpCodes.Ret);
+                                    il.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_0);
+                                    il.Emit(IKVM.Reflection.Emit.OpCodes.Ldfld, field);
+                                    il.Emit(IKVM.Reflection.Emit.OpCodes.Ret);
 
                                     var setter = exportsBuilder.DefineMethod(
                                     $"🌍 Set {i}",
                                         internalFunctionAttributes,
-                                        CallingConventions.Standard,
-                                        typeof(void),
-                                        new[] { contentType.ToSystemType(), exports }
+                                        IKVM.Reflection.CallingConventions.Standard,
+                                        universe.Import(typeof(void)),
+                                        new[] { universe.Import(contentType.ToSystemType()), exports }
                                         );
 
                                     il = setter.GetILGenerator();
-                                    il.Emit(OpCodes.Ldarg_1);
-                                    il.Emit(OpCodes.Ldarg_0);
-                                    il.Emit(OpCodes.Stfld, field);
-                                    il.Emit(OpCodes.Ret);
+                                    il.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_1);
+                                    il.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_0);
+                                    il.Emit(IKVM.Reflection.Emit.OpCodes.Stfld, field);
+                                    il.Emit(IKVM.Reflection.Emit.OpCodes.Ret);
 
                                     globalSetters[i] = new GlobalInfo(contentType, isMutable, setter);
 
@@ -548,19 +542,19 @@ where TExports : class
 
                                         if (instruction.OpCode == OpCode.End)
                                         {
-                                            context.Emit(OpCodes.Stfld, field);
+                                            context.Emit(IKVM.Reflection.Emit.OpCodes.Stfld, field);
                                             ended = true;
                                             continue;
                                         }
 
-                                        instruction.Compile(context);
+                                        instruction.CompileIKVM(context, universe);
                                         context.Previous = instruction.OpCode;
                                     }
                                 }
                             }
                         }
                         break;
-                    */
+                    
 		    case Section.Export:
 			{
 			    const IKVM.Reflection.MethodAttributes exportedPropertyAttributes =
