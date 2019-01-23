@@ -14,6 +14,11 @@ public abstract class Sample
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }
 
+public abstract class NewSample
+{
+    public abstract int foo(int val1, int val2);
+}
+
 static class Program
 {
     static void Main()
@@ -71,20 +76,17 @@ static class Program
 	//We now have enough for a usable WASM file, which we could save with module.WriteToBinary().
 	//Below, we show how the Compile feature can be used for .NET-based execution.
 	//For stream-based compilation, WebAssembly.Compile should be used.
-	//Func<Instance<Sample>> instanceCreator = module.Compile<Sample>();
-	IKVM.Reflection.Emit.AssemblyBuilder assembly = module.CompileIKVM<Sample>();
-	assembly.Save("CompiledWebAssembly.dll");
-	string filename = @".\CompiledWebAssembly.dll";
-	RunLoadedWasm(filename);
-	/*
-        //Instances should be wrapped in a "using" block for automatic disposal.
-        using (var instance = instanceCreator())
-        {
-            //FYI, instanceCreator can be used multiple times to create independant instances.
-            Console.WriteLine(instance.Exports.Demo(0)); //Binary 0, result 0
-            Console.WriteLine(instance.Exports.Demo(1)); //Binary 1, result 1
-            Console.WriteLine(instance.Exports.Demo(42));  //Binary 101010, result 3
-        } //Automatically release the WebAssembly instance here. */
+	var newModule = WebAssembly.Module.ReadFromBinary(@"C:\\Users\\v-mcpati\\Documents\\dotnet-webassembly\\test.wasm");
+
+	IKVM.Reflection.Emit.AssemblyBuilder assembly = module.CompileIKVM<Sample>("CompiledWasm");
+	assembly.Save("CompiledWasm.dll");
+	string filename = @".\CompiledWasm.dll";
+	//RunLoadedWasm(filename);
+
+	IKVM.Reflection.Emit.AssemblyBuilder newAssembly = newModule.CompileIKVM<NewSample>("NewCompiledWasm");
+	newAssembly.Save("NewCompiledWasm.dll");
+	filename = @".\NewCompiledWasm.dll";
+	//RunLoadedWasm(filename);
     }
 
     public static void RunLoadedWasm(string filename)
@@ -92,9 +94,9 @@ static class Program
 	System.Reflection.Assembly loadedAsm = System.Reflection.Assembly.LoadFrom(filename);
 	var t = loadedAsm.GetType("CompiledInstance");
 	object instance = Activator.CreateInstance(t);
-	var o = instance as Instance<Sample>;
-	Console.WriteLine(o.Exports.Demo(0)); //Binary 0, result 0
-	Console.WriteLine(o.Exports.Demo(1)); //Binary 1, result 1
-	Console.WriteLine(o.Exports.Demo(42)); //Binary 101010, result 3
+	var o = instance as Instance<NewSample>;
+	Console.WriteLine(o.Exports.foo(0, 1)); //Binary 0, result 0
+	Console.WriteLine(o.Exports.foo(2, 3)); //Binary 1, result 1
+	Console.WriteLine(o.Exports.foo(42, 40)); //Binary 101010, result 3
     }
 }

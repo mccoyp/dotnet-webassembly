@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
 using IKVM.Reflection;
-using IKVM.Reflection.Emit;
 
 namespace WebAssembly
 {
@@ -14,6 +12,7 @@ namespace WebAssembly
 	/// <summary>
 	/// Uses streaming compilation to create an executable <see cref="Instance{TExports}"/> from a binary WebAssembly source.
 	/// </summary>
+	/// <param name="assemblyName">The name of the assembly. The assembly can be saved as "[assemblyName].dll".</param>
 	/// <param name="path">The path to the file that contains a WebAssembly binary stream.</param>
 	/// <param name="imports">Functionality to integrate into the WebAssembly instance.</param>
 	/// <returns>The module.</returns>
@@ -29,23 +28,24 @@ namespace WebAssembly
 	/// The specified path, file name, or both exceed the system-defined maximum length.
 	/// For example, on Windows-based platforms, paths must be less than 248 characters, and file names must be less than 260 characters.</exception>
 	/// <exception cref="ModuleLoadException">An error was encountered while reading the WebAssembly file.</exception>
-	public static IKVM.Reflection.Emit.AssemblyBuilder FromBinary<TExports>(string path, IEnumerable<RuntimeImport> imports = null)
+	public static IKVM.Reflection.Emit.AssemblyBuilder FromBinary<TExports>(string assemblyName, string path, IEnumerable<RuntimeImport> imports = null)
 where TExports : class
 	{
 	    using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 4 * 1024, FileOptions.SequentialScan))
 	    {
-		return FromBinary<TExports>(stream, imports);
+		return FromBinary<TExports>(assemblyName, stream, imports);
 	    }
 	}
 
 	/// <summary>
 	/// Uses streaming compilation to create an executable <see cref="Instance{TExports}"/> from a binary WebAssembly source.
 	/// </summary>
+	/// <param name="assemblyName">The name of the assembly. The assembly can be saved as "[assemblyName].dll".</param>
 	/// <param name="input">The source of data.  The stream is left open after reading is complete.</param>
 	/// <param name="imports">Functionality to integrate into the WebAssembly instance.</param>
 	/// <returns>A function that creates instances on demand.</returns>
 	/// <exception cref="ArgumentNullException"><paramref name="input"/> cannot be null.</exception>
-	public static IKVM.Reflection.Emit.AssemblyBuilder FromBinary<TExports>(Stream input, IEnumerable<RuntimeImport> imports = null)
+	public static IKVM.Reflection.Emit.AssemblyBuilder FromBinary<TExports>(string assemblyName, Stream input, IEnumerable<RuntimeImport> imports = null)
 	where TExports : class
 	{
 	    var exportInfo = typeof(TExports).GetTypeInfo();
@@ -70,7 +70,7 @@ where TExports : class
 #endif
 		try
 		{
-		    assembly = FromBinary(reader, universe, universe.Import(typeof(Instance<TExports>)), universe.Import(typeof(TExports)), imports);
+		    assembly = FromBinary(assemblyName, reader, universe, universe.Import(typeof(Instance<TExports>)), universe.Import(typeof(TExports)), imports);
 		}
 		catch (OverflowException x)
 #if DEBUG
@@ -150,6 +150,7 @@ where TExports : class
 	}
 
 	private static IKVM.Reflection.Emit.AssemblyBuilder FromBinary(
+	    string assemblyName,
 	    Reader reader,
 	    Universe universe,
 	    IKVM.Reflection.Type instanceContainer,
@@ -178,11 +179,12 @@ where TExports : class
 	    var previousSection = Section.None;
 
 	    var assembly = universe.DefineDynamicAssembly(
-		new IKVM.Reflection.AssemblyName("CompiledWebAssembly"),
+		new IKVM.Reflection.AssemblyName(assemblyName),
 		new IKVM.Reflection.Emit.AssemblyBuilderAccess()
 		);
 
-	    var module = assembly.DefineDynamicModule("CompiledWebAssembly", "CompiledWebAssembly.dll");
+	    var dllName = assemblyName + ".dll";
+	    var module = assembly.DefineDynamicModule(assemblyName, dllName);
 
 	    const IKVM.Reflection.TypeAttributes classAttributes =
 		IKVM.Reflection.TypeAttributes.Public |
