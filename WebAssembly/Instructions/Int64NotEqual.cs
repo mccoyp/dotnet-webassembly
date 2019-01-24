@@ -1,25 +1,28 @@
 namespace WebAssembly.Instructions
 {
+    /// <summary>
+    /// Sign-agnostic compare unequal.
+    /// </summary>
+    public class Int64NotEqual : ValueTwoToInt32NotEqualZeroInstruction
+    {
 	/// <summary>
-	/// Sign-agnostic compare unequal.
+	/// Always <see cref="OpCode.Int64NotEqual"/>.
 	/// </summary>
-	public class Int64NotEqual : ValueTwoToInt32NotEqualZeroInstruction
+	public sealed override OpCode OpCode => OpCode.Int64NotEqual;
+
+	private protected sealed override ValueType ValueType => ValueType.Int64;
+
+	private protected sealed override System.Reflection.Emit.OpCode EmittedOpCode =>
+		System.Reflection.Emit.OpCodes.Ceq; //The result is compared for equality to zero, reversing it.
+
+	private protected sealed override IKVM.Reflection.Emit.OpCode IKVMEmittedOpCode =>
+		IKVM.Reflection.Emit.OpCodes.Ceq; //The result is compared for equality to zero, reversing it.
+
+	/// <summary>
+	/// Creates a new  <see cref="Int64NotEqual"/> instance.
+	/// </summary>
+	public Int64NotEqual()
 	{
-		/// <summary>
-		/// Always <see cref="OpCode.Int64NotEqual"/>.
-		/// </summary>
-		public sealed override OpCode OpCode => OpCode.Int64NotEqual;
-
-		private protected sealed override ValueType ValueType => ValueType.Int64;
-
-		private protected sealed override System.Reflection.Emit.OpCode EmittedOpCode =>
-			System.Reflection.Emit.OpCodes.Ceq; //The result is compared for equality to zero, reversing it.
-
-		/// <summary>
-		/// Creates a new  <see cref="Int64NotEqual"/> instance.
-		/// </summary>
-		public Int64NotEqual()
-		{
-		}
 	}
+    }
 }
