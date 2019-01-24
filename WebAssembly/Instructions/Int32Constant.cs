@@ -73,6 +73,12 @@ namespace WebAssembly.Instructions
 	    Emit(context, this.Value);
 	}
 
+	internal sealed override void CompileIKVM(IKVMCompilationContext context, IKVM.Reflection.Universe universe)
+	{
+	    context.Stack.Push(ValueType.Int32);
+	    Emit(context, this.Value);
+	}
+
 	internal static void Emit(CompilationContext context, int value)
 	{
 	    switch (value)

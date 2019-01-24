@@ -19,6 +19,8 @@ namespace WebAssembly.Instructions
 
 	private protected virtual System.Reflection.Emit.OpCode ConversionOpCode => OpCodes.Nop;
 
+	private protected virtual IKVM.Reflection.Emit.OpCode IKVMConversionOpCode => IKVM.Reflection.Emit.OpCodes.Nop;
+
 	internal sealed override void Compile(CompilationContext context)
 	{
 	    var stack = context.Stack;
@@ -101,9 +103,9 @@ namespace WebAssembly.Instructions
 	    if (alignment != 4)
 		context.Emit(IKVM.Reflection.Emit.OpCodes.Unaligned, alignment);
 
-	    context.Emit(this.EmittedOpCode);
-	    var conversion = this.ConversionOpCode;
-	    if (conversion != OpCodes.Nop)
+	    context.Emit(this.IKVMEmittedOpCode);
+	    var conversion = this.IKVMConversionOpCode;
+	    if (conversion != IKVM.Reflection.Emit.OpCodes.Nop)
 		context.Emit(conversion);
 
 	    stack.Push(this.Type);

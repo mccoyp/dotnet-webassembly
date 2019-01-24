@@ -104,8 +104,6 @@ namespace WebAssembly.Instructions
 
 	    context.Emit(IKVM.Reflection.Emit.OpCodes.Call, context[HelperMethod.Int32CountLeadingZeroes, (helper, c) =>
 	    {
-		throw new System.Exception("Not implemented");
-		/*
 		Assert(c != null);
 
 		var result = context.ExportsBuilder.DefineMethod(
@@ -155,12 +153,11 @@ namespace WebAssembly.Instructions
 
 		il.Emit(IKVM.Reflection.Emit.OpCodes.Ldc_I4_S, 32);
 		il.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_0);
-		il.Emit(IKVM.Reflection.Emit.OpCodes.Call, c[HelperMethod.Int32CountOneBits, Int32CountOneBits.IKVMCreateHelper(HelperMethod.Int32CountOneBits, context, universe)]);
+		il.Emit(IKVM.Reflection.Emit.OpCodes.Call, Int32CountOneBits.IKVMCreateHelper(HelperMethod.Int32CountOneBits, context, universe));
 		il.Emit(IKVM.Reflection.Emit.OpCodes.Sub);
 		il.Emit(IKVM.Reflection.Emit.OpCodes.Ret);
 
 		return result;
-		*/
 	    }
 	    ]);
 	}

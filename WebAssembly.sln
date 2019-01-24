@@ -15,13 +15,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sample", "Sample\Sample.csproj", "{01DD02FE-2386-49D9-982E-05556CE9905D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample", "Sample\Sample.csproj", "{01DD02FE-2386-49D9-982E-05556CE9905D}"
 	ProjectSection(ProjectDependencies) = postProject
 		{E9676C8C-A671-4978-8C62-40BBA257A597} = {E9676C8C-A671-4978-8C62-40BBA257A597}
 		{4CB170EF-DFE6-4A56-9E1B-A85449E827A7} = {4CB170EF-DFE6-4A56-9E1B-A85449E827A7}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IKVM.Reflection", "ikvm-fork\reflect\IKVM.Reflection.csproj", "{4CB170EF-DFE6-4A56-9E1B-A85449E827A7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IKVM.Reflection", "ikvm-fork\reflect\IKVM.Reflection.csproj", "{4CB170EF-DFE6-4A56-9E1B-A85449E827A7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WasmCompiler", "WasmCompiler\WasmCompiler.csproj", "{519F0E3A-43DB-4148-84F2-22812472B948}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WasmClass", "WasmClass\WasmClass.csproj", "{1E168864-9036-4BCE-BE92-EEA4F7FF4C64}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RunWasm", "RunWasm\RunWasm.csproj", "{5222DC47-6A2B-44D3-B123-87B52D2F3A0F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +51,18 @@ Global
 		{4CB170EF-DFE6-4A56-9E1B-A85449E827A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4CB170EF-DFE6-4A56-9E1B-A85449E827A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4CB170EF-DFE6-4A56-9E1B-A85449E827A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{519F0E3A-43DB-4148-84F2-22812472B948}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{519F0E3A-43DB-4148-84F2-22812472B948}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{519F0E3A-43DB-4148-84F2-22812472B948}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{519F0E3A-43DB-4148-84F2-22812472B948}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1E168864-9036-4BCE-BE92-EEA4F7FF4C64}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E168864-9036-4BCE-BE92-EEA4F7FF4C64}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E168864-9036-4BCE-BE92-EEA4F7FF4C64}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E168864-9036-4BCE-BE92-EEA4F7FF4C64}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5222DC47-6A2B-44D3-B123-87B52D2F3A0F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5222DC47-6A2B-44D3-B123-87B52D2F3A0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5222DC47-6A2B-44D3-B123-87B52D2F3A0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5222DC47-6A2B-44D3-B123-87B52D2F3A0F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,25 +1,28 @@
 namespace WebAssembly.Instructions
 {
+    /// <summary>
+    /// Unsigned less than.
+    /// </summary>
+    public class Int32LessThanUnsigned : ValueTwoToOneInstruction
+    {
 	/// <summary>
-	/// Unsigned less than.
+	/// Always <see cref="OpCode.Int32LessThanUnsigned"/>.
 	/// </summary>
-	public class Int32LessThanUnsigned : ValueTwoToOneInstruction
+	public sealed override OpCode OpCode => OpCode.Int32LessThanUnsigned;
+
+	private protected sealed override ValueType ValueType => ValueType.Int32;
+
+	private protected sealed override System.Reflection.Emit.OpCode EmittedOpCode =>
+		System.Reflection.Emit.OpCodes.Clt_Un;
+
+	private protected sealed override IKVM.Reflection.Emit.OpCode IKVMEmittedOpCode =>
+		IKVM.Reflection.Emit.OpCodes.Clt_Un;
+
+	/// <summary>
+	/// Creates a new  <see cref="Int32LessThanUnsigned"/> instance.
+	/// </summary>
+	public Int32LessThanUnsigned()
 	{
-		/// <summary>
-		/// Always <see cref="OpCode.Int32LessThanUnsigned"/>.
-		/// </summary>
-		public sealed override OpCode OpCode => OpCode.Int32LessThanUnsigned;
-
-		private protected sealed override ValueType ValueType => ValueType.Int32;
-
-		private protected sealed override System.Reflection.Emit.OpCode EmittedOpCode =>
-			System.Reflection.Emit.OpCodes.Clt_Un;
-
-		/// <summary>
-		/// Creates a new  <see cref="Int32LessThanUnsigned"/> instance.
-		/// </summary>
-		public Int32LessThanUnsigned()
-		{
-		}
 	}
+    }
 }

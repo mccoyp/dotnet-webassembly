@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "WasmCompiler": {
+      "commandName": "Project",
+      "commandLineArgs": "test.wasm CompiledWebAssembly RunWasm\\bin\\Debug\\netcoreapp2.1\\WasmClass.dll WasmClass.Sample",
+      "workingDirectory": "C:\\\\Users\\\\v-mcpati\\\\Documents\\\\dotnet-webassembly"
+    }
+  }
+}
