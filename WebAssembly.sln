@@ -21,7 +21,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WasmCompiler", "WasmCompile
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WasmClass", "WasmClass\WasmClass.csproj", "{1E168864-9036-4BCE-BE92-EEA4F7FF4C64}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WasmRunner", "RunWasm\WasmRunner.csproj", "{5222DC47-6A2B-44D3-B123-87B52D2F3A0F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WasmRunner", "WasmRunner\WasmRunner.csproj", "{5222DC47-6A2B-44D3-B123-87B52D2F3A0F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
