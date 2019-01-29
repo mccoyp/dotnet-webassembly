@@ -37,7 +37,7 @@ namespace WebAssembly.Instructions
 	    context.EmitLoadThis();
 	    context.Emit(OpCodes.Call, context[this.StoreHelper, this.CreateStoreMethod]);
 	}
-	/*
+	
 	internal sealed override void CompileIKVM(IKVMCompilationContext context, IKVM.Reflection.Universe universe)
 	{
 	    var stack = context.Stack;
@@ -54,9 +54,9 @@ namespace WebAssembly.Instructions
 
 	    Int32Constant.Emit(context, (int)this.Offset);
 	    context.EmitLoadThis();
-	    context.Emit(OpCodes.Call, context[this.StoreHelper, this.IKVMCreateStoreMethod]);
+	    context.Emit(IKVM.Reflection.Emit.OpCodes.Call, this.IKVMCreateStoreMethod(this.StoreHelper, context, universe));
 	}
-	*/
+	
 	private MethodBuilder CreateStoreMethod(HelperMethod helper, CompilationContext context)
 	{
 	    var builder = context.ExportsBuilder.DefineMethod(
@@ -88,7 +88,7 @@ namespace WebAssembly.Instructions
 
 	    return builder;
 	}
-	/*
+
 	private IKVM.Reflection.Emit.MethodBuilder IKVMCreateStoreMethod(HelperMethod helper, IKVMCompilationContext context, IKVM.Reflection.Universe universe)
 	{
 	    var builder = context.ExportsBuilder.DefineMethod(
@@ -109,10 +109,10 @@ namespace WebAssembly.Instructions
 	    il.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_2);
 	    il.Emit(IKVM.Reflection.Emit.OpCodes.Add_Ovf_Un);
 	    il.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_3);
-	    il.Emit(IKVM.Reflection.Emit.OpCodes.Call, context[this.RangeCheckHelper, CreateRangeCheck]);
+	    il.Emit(IKVM.Reflection.Emit.OpCodes.Call, IKVMCreateRangeCheck(this.RangeCheckHelper, context, universe));
 	    il.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_3);
 	    il.Emit(IKVM.Reflection.Emit.OpCodes.Ldfld, context.Memory);
-	    il.Emit(IKVM.Reflection.Emit.OpCodes.Call, Runtime.UnmanagedMemory.StartGetter);
+	    il.Emit(IKVM.Reflection.Emit.OpCodes.Call, Runtime.UnmanagedMemory.IKVMStartGetter(universe));
 	    il.Emit(IKVM.Reflection.Emit.OpCodes.Add);
 	    il.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_1);
 	    il.Emit(this.IKVMEmittedOpCode);
@@ -120,6 +120,5 @@ namespace WebAssembly.Instructions
 
 	    return builder;
 	}
-	*/
     }
 }

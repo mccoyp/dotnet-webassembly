@@ -132,6 +132,12 @@ namespace WebAssembly.Instructions
 	    context.Emit(OpCodes.Call, context[this.RangeCheckHelper, CreateRangeCheck]);
 	}
 
+	private protected void IKVMEmitRangeCheck(IKVMCompilationContext context, IKVM.Reflection.Universe universe)
+	{
+	    context.EmitLoadThis();
+	    context.Emit(IKVM.Reflection.Emit.OpCodes.Call, IKVMCreateRangeCheck(this.RangeCheckHelper, context, universe));
+	}
+
 	internal static MethodBuilder CreateRangeCheck(HelperMethod helper, CompilationContext context)
 	{
 	    byte size;
@@ -193,6 +199,70 @@ namespace WebAssembly.Instructions
 				    ;
 		    }));
 	    il.Emit(OpCodes.Throw);
+	    return builder;
+	}
+
+	internal static IKVM.Reflection.Emit.MethodBuilder IKVMCreateRangeCheck(HelperMethod helper, IKVMCompilationContext context, IKVM.Reflection.Universe universe)
+	{
+	    byte size;
+	    IKVM.Reflection.Emit.OpCode opCode;
+	    switch (helper)
+	    {
+		default:
+#if DEBUG
+		    Fail("Invalid size.");
+		    return null;
+#endif
+		case HelperMethod.RangeCheck8:
+		    size = 1;
+		    opCode = IKVM.Reflection.Emit.OpCodes.Ldc_I4_1;
+		    break;
+		case HelperMethod.RangeCheck16:
+		    size = 2;
+		    opCode = IKVM.Reflection.Emit.OpCodes.Ldc_I4_2;
+		    break;
+		case HelperMethod.RangeCheck32:
+		    size = 4;
+		    opCode = IKVM.Reflection.Emit.OpCodes.Ldc_I4_4;
+		    break;
+		case HelperMethod.RangeCheck64:
+		    size = 8;
+		    opCode = IKVM.Reflection.Emit.OpCodes.Ldc_I4_8;
+		    break;
+	    }
+
+	    var builder = context.ExportsBuilder.DefineMethod(
+		    $"☣ Range Check {size}",
+		    IKVMCompilationContext.HelperMethodAttributes,
+		    universe.Import(typeof(uint)),
+		    new[] { universe.Import(typeof(uint)), context.ExportsBuilder.AsType() }
+		    );
+	    var il = builder.GetILGenerator();
+	    il.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_1);
+	    il.Emit(IKVM.Reflection.Emit.OpCodes.Ldfld, context.Memory);
+	    il.Emit(IKVM.Reflection.Emit.OpCodes.Call, Runtime.UnmanagedMemory.IKVMSizeGetter(universe));
+	    il.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_0);
+	    il.Emit(opCode);
+	    il.Emit(IKVM.Reflection.Emit.OpCodes.Add_Ovf_Un);
+	    var outOfRange = il.DefineLabel();
+	    il.Emit(IKVM.Reflection.Emit.OpCodes.Blt_Un_S, outOfRange);
+	    il.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_0);
+	    il.Emit(IKVM.Reflection.Emit.OpCodes.Ret);
+	    il.MarkLabel(outOfRange);
+	    il.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_0);
+	    il.Emit(opCode);
+	    il.Emit(IKVM.Reflection.Emit.OpCodes.Newobj, universe.Import(typeof(MemoryAccessOutOfRangeException))
+		    .GetTypeInfo()
+		    .DeclaredConstructors
+		    .First(c =>
+		    {
+			var parms = c.GetParameters();
+			return parms.Length == 2
+				    && parms[0].ParameterType == universe.Import(typeof(uint))
+				    && parms[1].ParameterType == universe.Import(typeof(uint))
+				    ;
+		    }));
+	    il.Emit(IKVM.Reflection.Emit.OpCodes.Throw);
 	    return builder;
 	}
     }

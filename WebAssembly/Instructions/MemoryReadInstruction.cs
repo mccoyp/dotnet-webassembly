@@ -67,8 +67,6 @@ namespace WebAssembly.Instructions
 
 	internal sealed override void CompileIKVM(IKVMCompilationContext context, IKVM.Reflection.Universe universe)
 	{
-	    throw new System.Exception("Not implemented");
-	    /*
 	    var stack = context.Stack;
 	    if (stack.Count == 0)
 		throw new StackTooSmallException(this.OpCode, 1, 0);
@@ -83,11 +81,11 @@ namespace WebAssembly.Instructions
 		context.Emit(IKVM.Reflection.Emit.OpCodes.Add_Ovf_Un);
 	    }
 
-	    this.EmitRangeCheck(context);
+	    this.IKVMEmitRangeCheck(context, universe);
 
 	    context.EmitLoadThis();
 	    context.Emit(IKVM.Reflection.Emit.OpCodes.Ldfld, context.Memory);
-	    context.Emit(IKVM.Reflection.Emit.OpCodes.Call, Runtime.UnmanagedMemory.StartGetter);
+	    context.Emit(IKVM.Reflection.Emit.OpCodes.Call, Runtime.UnmanagedMemory.IKVMStartGetter(universe));
 	    context.Emit(IKVM.Reflection.Emit.OpCodes.Add);
 
 	    byte alignment;
@@ -109,7 +107,6 @@ namespace WebAssembly.Instructions
 		context.Emit(conversion);
 
 	    stack.Push(this.Type);
-	    */
 	}
     }
 }

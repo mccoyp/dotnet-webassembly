@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <None Include="..\CompiledWebAssembly.dll" Link="CompiledWebAssembly.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 

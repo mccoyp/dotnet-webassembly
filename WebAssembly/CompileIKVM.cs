@@ -825,7 +825,7 @@ where TExports : class
 
 				instanceConstructorIL.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_0);
 
-				//instanceConstructorIL.Emit(IKVM.Reflection.Emit.OpCodes.Call, context[HelperMethod.RangeCheck8, Instructions.MemoryImmediateInstruction.CreateRangeCheck]);
+				instanceConstructorIL.Emit(IKVM.Reflection.Emit.OpCodes.Call, Instructions.MemoryImmediateInstruction.IKVMCreateRangeCheck(HelperMethod.RangeCheck8, context, universe));
 				instanceConstructorIL.Emit(IKVM.Reflection.Emit.OpCodes.Pop);
 
 				if (data.Length > 0x3f0000) //Limitation of DefineInitializedData, can be corrected by splitting the data.
@@ -835,7 +835,7 @@ where TExports : class
 
 				instanceConstructorIL.Emit(IKVM.Reflection.Emit.OpCodes.Ldarg_0);
 				instanceConstructorIL.Emit(IKVM.Reflection.Emit.OpCodes.Ldfld, memory);
-				instanceConstructorIL.Emit(IKVM.Reflection.Emit.OpCodes.Call);//, Runtime.UnmanagedMemory.StartGetter);
+				instanceConstructorIL.Emit(IKVM.Reflection.Emit.OpCodes.Call, Runtime.UnmanagedMemory.IKVMStartGetter(universe));
 				instanceConstructorIL.Emit(IKVM.Reflection.Emit.OpCodes.Ldloc, address);
 				instanceConstructorIL.Emit(IKVM.Reflection.Emit.OpCodes.Conv_I);
 				instanceConstructorIL.Emit(IKVM.Reflection.Emit.OpCodes.Add_Ovf_Un);

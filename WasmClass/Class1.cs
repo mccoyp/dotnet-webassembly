@@ -4,7 +4,8 @@ namespace WasmClass
 {
     public abstract class Sample
     {
-	//Sometimes you can use C# dynamic instead of building an abstract class like this.
-	public abstract int foo(int value1, int value2);
+	public abstract int create_counter();
+	public abstract int add_to_counter(int value);
+	public abstract void delete_counter(int value);
     }
 }

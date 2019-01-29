@@ -12,8 +12,24 @@ namespace WebAssembly.Runtime
     {
 	internal static readonly RegeneratingWeakReference<MethodInfo> SizeGetter = new RegeneratingWeakReference<MethodInfo>(()
 		=> typeof(UnmanagedMemory).GetTypeInfo().DeclaredProperties.Where(prop => prop.Name == nameof(Size)).First().GetMethod);
+
+	internal static IKVM.Reflection.MethodInfo IKVMSizeGetter(IKVM.Reflection.Universe universe)
+	{
+	    IKVM.Reflection.MethodInfo info = new RegeneratingWeakReference<IKVM.Reflection.MethodInfo>(()
+		=> universe.Import(typeof(UnmanagedMemory)).GetTypeInfo().DeclaredProperties.Where(prop => prop.Name == nameof(Size)).First().GetMethod);
+	    return info;
+	}
+
 	internal static readonly RegeneratingWeakReference<MethodInfo> StartGetter = new RegeneratingWeakReference<MethodInfo>(()
 		=> typeof(UnmanagedMemory).GetTypeInfo().DeclaredProperties.Where(prop => prop.Name == nameof(Start)).First().GetMethod);
+
+	internal static IKVM.Reflection.MethodInfo IKVMStartGetter(IKVM.Reflection.Universe universe)
+	{
+	    IKVM.Reflection.MethodInfo info = new RegeneratingWeakReference<IKVM.Reflection.MethodInfo>(()
+		=> universe.Import(typeof(UnmanagedMemory)).GetTypeInfo().DeclaredProperties.Where(prop => prop.Name == nameof(Start)).First().GetMethod);
+	    return info;
+	}
+
 	internal static readonly RegeneratingWeakReference<MethodInfo> GrowMethod = new RegeneratingWeakReference<MethodInfo>(()
 		=> typeof(UnmanagedMemory).GetTypeInfo().DeclaredMethods.Where(prop => prop.Name == nameof(Grow)).First());
 	private static readonly RegeneratingWeakReference<long[]> emptyPage = new RegeneratingWeakReference<long[]>(() => new long[Memory.PageSize / 8]);
