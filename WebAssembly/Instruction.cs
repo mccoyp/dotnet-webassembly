@@ -29,7 +29,7 @@ namespace WebAssembly
 
 	internal virtual void CompileIKVM(IKVMCompilationContext context, IKVM.Reflection.Universe universe)
 	{
-	    throw new System.Exception("We shouldn't be here");
+	    throw new Exception("CompileIKVM override function needs to be implemented for instruction");
 	}
 
 	/// <summary>
