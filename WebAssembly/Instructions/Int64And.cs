@@ -1,25 +1,28 @@
 namespace WebAssembly.Instructions
 {
+    /// <summary>
+    /// Sign-agnostic bitwise and.
+    /// </summary>
+    public class Int64And : ValueTwoToOneInstruction
+    {
 	/// <summary>
-	/// Sign-agnostic bitwise and.
+	/// Always <see cref="OpCode.Int64And"/>.
 	/// </summary>
-	public class Int64And : ValueTwoToOneInstruction
+	public sealed override OpCode OpCode => OpCode.Int64And;
+
+	private protected sealed override ValueType ValueType => ValueType.Int64;
+
+	private protected sealed override System.Reflection.Emit.OpCode EmittedOpCode =>
+		System.Reflection.Emit.OpCodes.And;
+
+	private protected sealed override IKVM.Reflection.Emit.OpCode IKVMEmittedOpCode =>
+		IKVM.Reflection.Emit.OpCodes.And;
+
+	/// <summary>
+	/// Creates a new  <see cref="Int64And"/> instance.
+	/// </summary>
+	public Int64And()
 	{
-		/// <summary>
-		/// Always <see cref="OpCode.Int64And"/>.
-		/// </summary>
-		public sealed override OpCode OpCode => OpCode.Int64And;
-
-		private protected sealed override ValueType ValueType => ValueType.Int64;
-
-		private protected sealed override System.Reflection.Emit.OpCode EmittedOpCode =>
-			System.Reflection.Emit.OpCodes.And;
-
-		/// <summary>
-		/// Creates a new  <see cref="Int64And"/> instance.
-		/// </summary>
-		public Int64And()
-		{
-		}
 	}
+    }
 }

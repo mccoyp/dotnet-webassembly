@@ -18,7 +18,12 @@ namespace WebAssembly
 		/// </summary>
 		public MethodInfo Method { get; private set; }
 
-		internal readonly Type Type;
+        /// <summary>
+		/// The method to use for the import.
+		/// </summary>
+		public IKVM.Reflection.MethodInfo IKVMMethod { get; private set; }
+
+        internal readonly Type Type;
 
 		/// <summary>
 		/// Creates a new <see cref="FunctionImport"/> instance with the provided <see cref="MethodInfo"/>.
@@ -59,5 +64,47 @@ namespace WebAssembly
 
 			this.Method = method;
 		}
-	}
+        /*
+        /// <summary>
+		/// Creates a new <see cref="FunctionImport"/> instance with the provided <see cref="MethodInfo"/>.
+		/// </summary>
+        /// <param name="universe">The IKVM.Reflection.Universe object used to import System types.</param>
+		/// <param name="moduleName">The first portion of the two part name.</param>
+		/// <param name="exportName">The second portion of the two-part name.</param>
+		/// <param name="method">The method to use for the import.</param>
+		/// <exception cref="ArgumentNullException">No parameters can be null.</exception>
+		/// <exception cref="ArgumentException"><paramref name="method"/> must be public, static, and cannot be a <see cref="System.Reflection.Emit.MethodBuilder"/>.</exception>
+        public FunctionImport(IKVM.Reflection.Universe universe, string moduleName, string exportName, IKVM.Reflection.MethodInfo method)
+            : base(moduleName, exportName)
+        {
+            if (method == null)
+                throw new ArgumentNullException(nameof(method));
+
+            if (method.IsStatic == false || method.IsPublic == false)
+                throw new ArgumentException("Imported methods must be public and static.", nameof(method));
+
+            if (method is IKVM.Reflection.Emit.MethodBuilder)
+                throw new ArgumentException("Imported methods cannot be dynamic method builders.", nameof(method));
+
+            this.Type = new Type();
+            
+            if (method.ReturnType != universe.Import(typeof(void)))
+            {
+                if (!method.ReturnType.TryConvertToValueType(out var type))
+                    throw new ArgumentNullException($"Return type {method.ReturnType} is not compatible with WebAssembly.");
+
+                this.Type.Returns = new[] { type };
+            }
+            
+            foreach (var parameter in method.GetParameters())
+            {
+                if (!parameter.ParameterType.TryConvertToValueType(out var type))
+                    throw new ArgumentNullException($"Parameter type {parameter} is not compatible with WebAssembly.");
+
+                this.Type.Parameters.Add(type);
+            }
+
+            this.IKVMMethod = method;
+        } */
+    }
 }
