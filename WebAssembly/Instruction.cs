@@ -27,6 +27,7 @@ namespace WebAssembly
 
 	internal abstract void Compile(CompilationContext context);
 
+	//TODO: make this abstract instead of virtual and implement in every remaining instruction
 	internal virtual void CompileIKVM(IKVMCompilationContext context, IKVM.Reflection.Universe universe)
 	{
 	    throw new Exception("CompileIKVM override function needs to be implemented for instruction");

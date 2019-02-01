@@ -5,29 +5,26 @@ namespace WasmCompiler
 {
     class Program
     {
-	// Current commandline interface:
+	// Command line interface 1:
 	//     WasmCompiler.exe <input.wasm> <outputAssemblyName>
 	//
-	//  New interfaces:
+	//  Interface 2:
 	//     WasmCompiler.exe <input.wasm> <outputAssemblyName> <interface.dll> <className>
 	//
-	//  in inteface.dll:
-	//    public abstract class Sample { int Demo (int); }
+	//  in WasmClass:
+	//    public abstract class Sample { ... }
 	//
-	//  run with:   WasmCompiler.exe test.wasm CompiledWebAssembly interface.dll Sample
-	//
-	// 
-	//
-	//    "module.CompileIKVM<Sample>(assemblyname)"
-	// var wasmModule = typeof(WebAssembly.Module);
+	//  run with:   WasmCompiler.exe test.wasm CompiledWebAssembly \...\WasmClass.dll WasmClass.Sample
 
+	// Command line arguments:
+	// WasmCompiler.exe [wasm file location] [assemblyname] [optional: abstract class location] [optional: abstract class name]
 	static void Main(string[] args)
 	{
 	    var filename = args[0];
 	    var assemblyname = args[1];
 	    var module = WebAssembly.Module.ReadFromBinary(filename);
 
-	    if (args.Length < 4)
+	    if (args.Length < 4)  // if no abstract class specified, uses WasmClass default
 	    {
 		IKVM.Reflection.Emit.AssemblyBuilder assembly = module.CompileIKVM<Sample>(assemblyname);
 		assembly.Save(assemblyname + ".dll");
